@@ -42,13 +42,13 @@ Dropover is a great paid app. Dropshit is the same idea, written from scratch as
 
 ### Pre-built DMG
 
-Latest release: <https://github.com/iamsumanp/Dropshit/releases/latest>
+Latest release: <https://github.com/nimeshk03/Dropshit/releases/latest>
 
 One-liner install:
 
 ```sh
 curl -L -o ~/Downloads/Dropshit.dmg \
-  https://github.com/iamsumanp/Dropshit/releases/latest/download/Dropshit.dmg
+  https://github.com/nimeshk03/Dropshit/releases/latest/download/Dropshit.dmg
 open ~/Downloads/Dropshit.dmg
 # Drag Dropshit.app to /Applications, eject the DMG, then:
 xattr -dr com.apple.quarantine /Applications/Dropshit.app
@@ -59,10 +59,18 @@ The `xattr` step is one-time per machine — the DMG is ad-hoc signed (no Apple 
 
 ### Build from source
 
-Requires macOS 13+ and the Swift toolchain that ships with Xcode 15+ (Swift 5.9).
+Requires macOS 13+ and a full **Xcode** install (not just the Command Line Tools).
+CLT ships no `SwiftUIMacros` plugin, so the build dies with `external macro
+implementation type 'SwiftUIMacros.StateMacro' could not be found`. If you have
+both, point the toolchain at Xcode:
 
 ```sh
-git clone https://github.com/iamsumanp/Dropshit.git
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
+```
+
+```sh
+git clone https://github.com/nimeshk03/Dropshit.git
 cd Dropshit
 
 # Run for development:
@@ -85,7 +93,11 @@ gh release create v1.2 Dropshit.dmg \
 
 ### Releasing a new version (with auto-update)
 
-Dropshit ships with Sparkle 2.x for in-app updates from v1.5.0 onward. Each release is signed with an EdDSA private key and listed in `appcast.xml` so existing installs pick it up.
+Dropshit ships with Sparkle 2.x for in-app updates from v1.5.1 onward. Each release is signed with an EdDSA private key and listed in `appcast.xml` so existing installs pick it up.
+
+> v1.5.0 shipped without its SwiftPM resource bundle and crashed in `Bundle.module`
+> before reaching the menubar, so it could never check for updates. Anyone on 1.5.0
+> has to install v1.5.1 manually.
 
 **One-time setup (per release machine):**
 
@@ -105,7 +117,7 @@ Dropshit ships with Sparkle 2.x for in-app updates from v1.5.0 onward. Each rele
 5. `gh release create v<version> Dropshit.dmg --title "Dropshit v<version>" --notes "..."`
 6. `git add appcast.xml && git commit -m "release: v<version>" && git push origin main`
 
-Existing v1.5.0+ installs see the new version on their next daily check (or when the user clicks "Check for Updates…" in the menu). v1.4.x users will need to download v1.5.0 manually one final time.
+Existing v1.5.1+ installs see the new version on their next daily check (or when the user clicks "Check for Updates…" in the menu). v1.5.0 and v1.4.x users need to download v1.5.1 manually one final time.
 
 ## Permissions
 

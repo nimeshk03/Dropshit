@@ -8,6 +8,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# The repo that hosts the releases Sparkle downloads from. Must match the
+# owner/name whose appcast.xml is set as SPARKLE_FEED_URL in build-dmg.sh,
+# otherwise installs check this fork's feed but fetch someone else's DMG.
+GITHUB_REPO="${GITHUB_REPO:-nimeshk03/Dropshit}"
+
 DMG="${1:-Dropshit.dmg}"
 VERSION="${2:-}"
 
@@ -35,14 +40,14 @@ DMG_NAME="$(basename "${DMG}")"
 cat <<XML
         <item>
             <title>Dropshit ${VERSION}</title>
-            <link>https://github.com/iamsumanp/Dropshit/releases/tag/v${VERSION}</link>
+            <link>https://github.com/${GITHUB_REPO}/releases/tag/v${VERSION}</link>
             <sparkle:version>${VERSION}</sparkle:version>
             <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
             <pubDate>${PUBDATE}</pubDate>
-            <description><![CDATA[See release notes at https://github.com/iamsumanp/Dropshit/releases/tag/v${VERSION}]]></description>
+            <description><![CDATA[See release notes at https://github.com/${GITHUB_REPO}/releases/tag/v${VERSION}]]></description>
             <enclosure
-                url="https://github.com/iamsumanp/Dropshit/releases/download/v${VERSION}/${DMG_NAME}"
+                url="https://github.com/${GITHUB_REPO}/releases/download/v${VERSION}/${DMG_NAME}"
                 ${SIG_LINE}
                 type="application/octet-stream" />
         </item>

@@ -1,6 +1,8 @@
 import XCTest
 @testable import ShelfDemo
 
+// UpdateController is @MainActor, so its statics are main-actor-isolated.
+@MainActor
 final class UpdateControllerTests: XCTestCase {
     private let key = "SUEnableAutomaticChecks"
 

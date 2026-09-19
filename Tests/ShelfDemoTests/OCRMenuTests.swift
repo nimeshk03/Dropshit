@@ -2,6 +2,8 @@ import XCTest
 import UniformTypeIdentifiers
 @testable import ShelfDemo
 
+// OCRMenu is @MainActor, so its statics are main-actor-isolated.
+@MainActor
 final class OCRMenuTests: XCTestCase {
     func test_makeSearchable_offered_for_pdfs_only() {
         XCTAssertTrue(OCRMenu.shouldOfferMakeSearchable(forSourceUTIs: [UTType.pdf]))

@@ -91,12 +91,15 @@ final class ImageConverterTests: XCTestCase {
         }
         // Re-write src as a real PNG (the empty data above isn't decodable).
         let realPNG = try makeSyntheticPNG(named: "real")
-        try? FileManager.default.removeItem(at: src)
-        // We can't write into the locked dir — but can put the source there
-        // by relaxing permissions briefly:
+        // We can't write into the locked dir — but can put the source there by
+        // relaxing permissions briefly. The remove has to come *after* the
+        // chmod: unlinking needs write permission on the parent directory, so
+        // doing it while the dir is 0o555 fails silently and the copy below
+        // then trips over the leftover file.
         try FileManager.default.setAttributes(
             [.posixPermissions: 0o755], ofItemAtPath: lockedDir.path
         )
+        try? FileManager.default.removeItem(at: src)
         try FileManager.default.copyItem(at: realPNG, to: src)
         try FileManager.default.setAttributes(
             [.posixPermissions: 0o555], ofItemAtPath: lockedDir.path

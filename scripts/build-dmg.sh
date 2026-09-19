@@ -23,7 +23,7 @@ if [ -z "${SPARKLE_PUBLIC_KEY:-}" ]; then
 fi
 
 # Sparkle appcast feed — raw GitHub URL on main.
-SPARKLE_FEED_URL="https://raw.githubusercontent.com/iamsumanp/Dropshit/main/appcast.xml"
+SPARKLE_FEED_URL="https://raw.githubusercontent.com/nimeshk03/Dropshit/main/appcast.xml"
 
 APP_NAME="Dropshit"
 BIN_NAME="ShelfDemo"
@@ -31,7 +31,7 @@ BUNDLE_ID="com.boski.dropshit"
 # VERSION drives both CFBundleShortVersionString and CFBundleVersion so the
 # value Sparkle compares (sparkle:version vs CFBundleVersion) lines up with
 # the same dotted form we publish in appcast.xml.
-VERSION="1.5.0"
+VERSION="1.5.1"
 MIN_OS="13.0"
 
 APP_DIR="dist/${APP_NAME}.app"
@@ -63,6 +63,30 @@ install_name_tool -add_rpath @executable_path/../Frameworks "${APP_DIR}/Contents
 if [ -d "Sources/${BIN_NAME}/Resources" ]; then
   cp -R "Sources/${BIN_NAME}/Resources/." "${APP_DIR}/Contents/Resources/" 2>/dev/null || true
 fi
+
+# SwiftPM compiles the target's `resources:` into a separate resource bundle
+# named <Package>_<Target>.bundle. v1.5.0 never shipped it, so Bundle.module
+# hit its fatalError on launch and the app died before showing a menubar icon
+# (upstream issue #3). Copying the loose .lproj folders above is not enough:
+# Bundle.module ignores them and looks only for the .bundle itself.
+#
+# Contents/Resources is the right home for it: the generated accessor checks
+# Bundle.main.resourceURL first, which is exactly Contents/Resources for an
+# .app. Do NOT be tempted to drop it at the .app root instead — that also
+# resolves, but leaves "unsealed contents present in the bundle root" and
+# codesign/spctl then reject the app.
+RESOURCE_BUNDLE_NAME="${BIN_NAME}_${BIN_NAME}.bundle"
+RESOURCE_BUNDLE_SRC=".build/release/${RESOURCE_BUNDLE_NAME}"
+if [ ! -d "${RESOURCE_BUNDLE_SRC}" ]; then
+  # Newer SwiftPM build systems stage products under .build/out/Products/.
+  RESOURCE_BUNDLE_SRC="$(find .build -type d -name "${RESOURCE_BUNDLE_NAME}" -not -path '*/Intermediates.noindex/*' | head -1)"
+fi
+if [ -z "${RESOURCE_BUNDLE_SRC}" ] || [ ! -d "${RESOURCE_BUNDLE_SRC}" ]; then
+  echo "ERROR: ${RESOURCE_BUNDLE_NAME} not found under .build — the app would"
+  echo "       crash on launch in Bundle.module. Run 'swift build -c release' first."
+  exit 1
+fi
+cp -R "${RESOURCE_BUNDLE_SRC}" "${APP_DIR}/Contents/Resources/"
 
 echo "==> Embedding Sparkle.framework"
 # The Sparkle xcframework artifact ships in .build/artifacts/ after `swift
